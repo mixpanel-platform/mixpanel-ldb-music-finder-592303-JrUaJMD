@@ -9,8 +9,13 @@
   <body class="mixpanel-platform-body">
     <h1>A/B Testing Experiments</h1>
     <div id="experiment1">
+      <p>Experiment (People Property Name)</p>
       <div id="experiment-select1"></div>
+      <p>Experiment Name (Event Property)</p>
+      <div id="prop-select1"></div>
+      <p>Conversion Event 1</p>
       <div id="conversion-event1a"></div>
+      <p>Conversion Event 2</p>
       <div id="conversion-event1b"></div>
       <div id="funnel1a"></div>
       <div id="table1a"></div>
@@ -18,8 +23,13 @@
       <div id="table1b"></div>
     </div>
     <div id="experiment2">
+      <p>Experiment (People Property Name)</p>
       <div id="experiment-select2"></div>
+      <p>Experiment Name (Event Property)</p>
+      <div id="prop-select2"></div>
+      <p>Conversion Event 1</p>
       <div id="conversion-event2a"></div>
+      <p>Conversion Event 2</p>
       <div id="conversion-event2b"></div>
       <div id="funnel2a"></div>
       <div id="table2a"></div>
@@ -27,8 +37,13 @@
       <div id="table2b"></div>
     </div>
     <div id="experiment3">
+      <p>Experiment (People Property Name)</p>
       <div id="experiment-select3"></div>
+      <p>Experiment Name (Event Property)</p>
+      <div id="prop-select3"></div>
+      <p>Conversion Event 1</p>
       <div id="conversion-event3a"></div>
+      <p>Conversion Event 2</p>
       <div id="conversion-event3b"></div>
       <div id="funnel3a"></div>
       <div id="table3a"></div>
@@ -36,8 +51,13 @@
       <div id="table3b"></div>
     </div>
     <div id="experiment4">
+      <p>Experiment (People Property Name)</p>
       <div id="experiment-select4"></div>
+      <p>Experiment Name (Event Property)</p>
+      <div id="prop-select4"></div>
+      <p>Conversion Event 1</p>
       <div id="conversion-event4a"></div>
+      <p>Conversion Event 2</p>
       <div id="conversion-event4b"></div>
       <div id="funnel4a"></div>
       <div id="table4a"></div>
@@ -58,11 +78,10 @@
         items: [
           {label: "Select an experiment", value: "select"}
         ]
-      };
-      var experimentSelects = []
+      },
+         experimentSelects = [];
 
-      MP.api.query('/api/2.0/engage/properties')
-      .done(function(json) {
+      MP.api.query('/api/2.0/engage/properties').done(function(json) {
         for (property in json.results) {
           peopleProps.items.push({label: property, value: property});
         }
@@ -71,26 +90,65 @@
         }
         
         experimentSelects[1].on('change', function(e, selection) {
-          console.log('hi');
           runQuery(1);
+          $('#experiment2').show();
         });
         experimentSelects[2].on('change', function(e, selection) {
           runQuery(2);
+          $('#experiment3').show();
         });
         experimentSelects[3].on('change', function(e, selection) {
           runQuery(3);
+          $('#experiment4').show();
         });
         experimentSelects[4].on('change', function(e, selection) {
           runQuery(4);
         });
       });
       
+      for (i=1; i<=4; i++) {
+        $('#prop-select' + i).MPPropertySelect();
+        $('#prop-select' + i).MPPropertySelect('setEvent', 'Experiment Viewed');
+        $('#conversion-event' + i + 'a').MPEventSelect();
+        $('#conversion-event' + i + 'b').MPEventSelect();
+      }
+      
       function runQuery(exp) {
         var experiment = experimentSelects[exp].MPSelect('value');
+        people = {};
         
-        MP.api.people().done(function(json) {
-          console.log(json.values());
+        MP.api.people().done(function(json0) {
+
+          parameters = {'session_id': json0.values().session_id, 'page': 0};
+          has_results = true;
+          
+          peopleObject = json0;
+          
+          while (has_results) {
+            profiles = peopleObject.values().results;
+            for (var profile in profiles) {
+              if (profiles.hasOwnProperty(profile)) {
+                if (profiles[profile].$properties.hasOwnProperty(experiment)) {
+                  var distinct = profiles[profile].$distinct_id;
+                  var experimentValue = profiles[profile].$properties[experiment];
+                  people[distinct] = experimentValue;
+                }
+              }
+            }
+            has_results = Object.keys(profiles).length == 1000;
+            parameters['page'] ++;
+            
+            if (has_results) {
+              MP.api.people(parameters).done(function(json) {
+                peopleObject = json;
+              });
+            }
+          }
+          
+          console.log(people);
+
         });
+        
       }
       
 
