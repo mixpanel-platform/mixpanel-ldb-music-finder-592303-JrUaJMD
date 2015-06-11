@@ -7,9 +7,93 @@
     <script src="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.js"></script>
   </head>
   <body class="mixpanel-platform-body">
-    <h1>Hello, World!</h1>
+    <h1>A/B Testing Experiments</h1>
+    <div id="experiment1">
+      <div id="experiment-select1"></div>
+      <div id="conversion-event1a"></div>
+      <div id="conversion-event1b"></div>
+      <div id="funnel1a"></div>
+      <div id="table1a"></div>
+      <div id="funnel1b"></div>
+      <div id="table1b"></div>
+    </div>
+    <div id="experiment2">
+      <div id="experiment-select2"></div>
+      <div id="conversion-event2a"></div>
+      <div id="conversion-event2b"></div>
+      <div id="funnel2a"></div>
+      <div id="table2a"></div>
+      <div id="funnel2b"></div>
+      <div id="table2b"></div>
+    </div>
+    <div id="experiment3">
+      <div id="experiment-select3"></div>
+      <div id="conversion-event3a"></div>
+      <div id="conversion-event3b"></div>
+      <div id="funnel3a"></div>
+      <div id="table3a"></div>
+      <div id="funnel3b"></div>
+      <div id="table3b"></div>
+    </div>
+    <div id="experiment4">
+      <div id="experiment-select4"></div>
+      <div id="conversion-event4a"></div>
+      <div id="conversion-event4b"></div>
+      <div id="funnel4a"></div>
+      <div id="table4a"></div>
+      <div id="funnel4b"></div>
+      <div id="table4b"></div>
+    </div>
+    <style>
+      h1 {
+        font-size: 16px;
+        margin-bottom: 16px;
+      }
+      #experiment2, #experiment3, #experiment4 {
+        display: none;
+      }
+    </style>
     <script>
-      // Run queries and display results here
+      var peopleProps = {
+        items: [
+          {label: "Select an experiment", value: "select"}
+        ]
+      };
+      var experimentSelects = []
+
+      MP.api.query('/api/2.0/engage/properties')
+      .done(function(json) {
+        for (property in json.results) {
+          peopleProps.items.push({label: property, value: property});
+        }
+        for (i=1; i<=4; i++) {
+          experimentSelects[i] = $('#experiment-select' + i).MPSelect(peopleProps);
+        }
+        
+        experimentSelects[1].on('change', function(e, selection) {
+          console.log('hi');
+          runQuery(1);
+        });
+        experimentSelects[2].on('change', function(e, selection) {
+          runQuery(2);
+        });
+        experimentSelects[3].on('change', function(e, selection) {
+          runQuery(3);
+        });
+        experimentSelects[4].on('change', function(e, selection) {
+          runQuery(4);
+        });
+      });
+      
+      function runQuery(exp) {
+        var experiment = experimentSelects[exp].MPSelect('value');
+        
+        MP.api.people().done(function(json) {
+          console.log(json.values());
+        });
+      }
+      
+
     </script>
   </body>
 </html>
