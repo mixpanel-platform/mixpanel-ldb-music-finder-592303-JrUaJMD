@@ -9,18 +9,35 @@
   <body class="mixpanel-platform-body">
     <h1>A/B Test: Experiment Detail</h1>
     <div id="experiment">
-      <p>Experiment (People Property Name)</p>
-      <div id="experiment-select"></div>
-      <p>Experiment Name (Event Property)</p>
-      <div id="prop-select"></div>
-      <p>Conversion Event 1</p>
-      <div id="conversion-eventa"></div>
-      <p>Conversion Event 2</p>
-      <div id="conversion-eventb"></div>
-      <div id="funnela"></div>
-      <div id="tablea"></div>
-      <div id="funnelb"></div>
-      <div id="tableb"></div>
+      <div class="left">
+        <p>Experiment (People Property Name)</p>
+        <div class="select" id="people-prop-select"></div>
+      </div>
+      <div class="right">
+        <p>Experiment Name (Event Property)</p>
+        <div class="select" id="event-prop-select"></div>
+      </div>
+      <br><hr><br>
+      <div class="conversion">
+        <p>Conversion Event 1</p>
+        <div id="conversion-event-a"></div>
+        <div class="select2 where a">where</div>
+        <div class="select2 prop" id="conversion-prop-a"></div>
+        <div class="select2 contains a"></div>
+        <div class="select2 prop" id="conversion-prop-value-a"></div>
+        <div class="report" id="funnel-a"></div>
+        <div class="report" id="table-a"></div>
+      </div>
+      <div class="conversion">
+        <p>Conversion Event 2</p>
+        <div id="conversion-event-b"></div>
+        <div class="select2 where b">where</div>
+        <div class="select2 prop" id="conversion-prop-b"></div>
+        <div class="select2 contains b"></div>
+        <div class="select2 prop" id="conversion-prop-value-b"></div>
+        <div class="report" id="funnel-b"></div>
+        <div class="report" id="table-b"></div>
+      </div>
     </div>
     <style>
       h1 {
@@ -30,11 +47,21 @@
       h2 {
         font-size: 16px;
       }
-      #experiment {
-        display: none;
-      }
       .left, .right {
         width: 40%;
+        display: inline-block;
+      }
+      .select {
+        width: 85%;
+      }
+      .select2 {
+        margin: 15px 15px 0 0;
+      }
+      .where {
+        line-height: 33px;
+      }
+      .where, .contains {
+        display: none;
       }
       .report {
         margin: 15px 0 0;
@@ -42,12 +69,12 @@
     </style>
     <script>
       // LDB NOTES
-      // add property selector(s?) to conversion event dropdowns
-      // add monetization goal - always using average first payment amount for each of variants - maybe we'll have the first conversion be first payment and the second conversion be whatever event they choose (which can change)?
       // add date picker and maybe funnel conversion length e.g., 14 days?
       // need total users in each experiment in the table also? those that were set to get the experiment vs. those that actually viewed the experiment...? or are people properties and events sent at the same time
       // add css
       // nice to haves: duration (first time experiment viewed with that experiment name property was fired) and retention (has that person also paid in the last 30 days)
+      
+      // monetization is currently tracking average first payment and lifetime revenue *of everyone in the experiment* not just people who paid. do we want only those who have paid?
 
     
     
@@ -55,30 +82,31 @@
       var numExperiments = 0,
           peopleProps = {
             items: [
-              {label: "-- Select an experiment (people properties) --", value: "select"}
+              {label: "-- Select People Property --", value: "select"}
             ]
           },
           eventPropValues = {
             items: [
-              {label: '-- Select experiment name ("Experiment Viewed" event properties) --', value: "select"}
+              {label: '-- Select "Experiment Viewed" Event Property --', value: "select"}
             ]
           },
-          experimentSelects = [],
-          eventSelects = [],
-          conversionSelects = {},
-          funnelSelects = {},
-          tableSelects = {};
+          experimentSelect = '',
+          eventSelect = '',
+          conversionSelects = [],
+          propertySelects = [],
+          queries = [],
+          propValueSelects = [],
+          funnelSelects = [],
+          tableSelects = [];
           
-      function addExperiment(i) {
-        content = '<div id="experiment' + i + '"><h2>Experiment ' + i + '</h2><div class="left"><p>Experiment (People Property Name)</p><div id="experiment-select' + i + '"></div><p>Experiment Name (Event Property)</p><div id="prop-select' + i + '"></div></div><div class="right"><p>Conversion Event 1</p><div id="conversion-event' + i + 'a"></div><p>Conversion Event 2</p><div id="conversion-event' + i + 'b"></div></div><div class="report" id="funnel' + i + 'a"></div><div class="report" id="table' + i + 'a"></div><div class="report" id="funnel' + i + 'b"></div><div class="report" id="table' + i + 'b"></div></div>'
-        $('body').append(content);
-        
+      function addExperiment() {
+
         // query People to create the dropdown of people properties
         MP.api.query('/api/2.0/engage/properties').done(function(json) {
           for (property in json.results) {
             peopleProps.items.push({label: property, value: property});
           }
-          experimentSelects[i] = $('#experiment-select' + i).MPSelect(peopleProps);
+          experimentSelect = $('#people-prop-select').MPSelect(peopleProps);
         });
         
         // query property values for experiment names on the Experiment Viewed event to create dropdown of event properties
@@ -87,23 +115,24 @@
           for (property in array) {
             eventPropValues.items.push({label: array[property], value: array[property]});
           }
-          eventSelects[i] = $('#prop-select' + i).MPSelect(eventPropValues);
+          eventSelect = $('#event-prop-select').MPSelect(eventPropValues);
         });
         
         // create event dropdowns
-        conversionSelects[i] = {};
-        conversionSelects[i]['a'] = $('#conversion-event' + i + 'a').MPEventSelect();
-        conversionSelects[i]['b'] = $('#conversion-event' + i + 'b').MPEventSelect();
+        conversionSelects['a'] = $('#conversion-event-a').MPEventSelect();
+        conversionSelects['b'] = $('#conversion-event-b').MPEventSelect();
 
-        // 
-        funnelSelects[i] = {};
-        funnelSelects[i]['a'] = $('#funnel' + i + 'a').MPChart({chartType: 'line'});
-        funnelSelects[i]['b'] = $('#funnel' + i + 'b').MPChart({chartType: 'line'});
+        // create property dropdowns
+        propertySelects['a'] = $('#conversion-prop-a').MPPropertySelect();
+        propertySelects['b'] = $('#conversion-prop-b').MPPropertySelect();
+        
+        // set up funnel graphs (will show conversion rates over time)
+        funnelSelects['a'] = $('#funnel-a').MPChart({chartType: 'line'});
+        funnelSelects['b'] = $('#funnel-b').MPChart({chartType: 'line'});
 
-        // 
-        tableSelects[i] = {};
-        tableSelects[i]['a'] = $('#table' + i + 'a').MPTable();
-        tableSelects[i]['b'] = $('#table' + i + 'b').MPTable();
+        // set up tables
+        tableSelects['a'] = $('#table-a').MPTable();
+        tableSelects['b'] = $('#table-b').MPTable();
 
       }
       
@@ -118,6 +147,7 @@
           if (!isNaN(improvement) && improvement !== Infinity) {
             improvement = (improvement * 100).toFixed(1) + '%';
             if (improvement > 0) {
+              console.log('yes');
               improvement = '+' + improvement;
             }
           }
@@ -147,46 +177,52 @@
           var y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*Math.exp(-zscore*zscore);
           
           var chance = 0.5*(1.0 + sign*y),
-              significance = '--';
+              result = '--';
           
           if (total1 < 10) {
-            ///////////////////////// $.noop(); jQuery17109128623860888183_1434226925965???????????
+            ///////////////////////// $.noop(); jQuery17109128623860888183_1434226925966???????????
             chance = 'Sample size too small'
           }
           else if (chance >= 0.95) {
-            significance = 'Win'
+            result = 'Win'
           }
           else if (chance <= 0.05) {
-            significance = 'Lose'
+            result = 'Lose'
           }
           else if (0.95 > chance > 0.05) {
-            significance = 'Requires 95% significance'
+            result = 'Not Significant'
           }
           
           if (!isNaN(chance)) {
             chance = (chance * 100).toFixed(1) + '%';
           }
           
-          var variant_stats = [improvement, ci, chance, significance];
+          var variant_stats = [improvement, ci, chance, result];
         }
         
         else if (conv0 == 0) {
-          var variant_stats = ['Conversion of original cannot equal 0', '', 'N/A', 'N/A'];
+          var variant_stats = ['Conversion of original cannot equal 0', '', 'N/A', ''];
         }
         else {
-          var variant_stats = ['N/A', '', 'N/A', 'N/A']
+          var variant_stats = ['N/A', '', 'N/A', '']
         }
         
         return variant_stats;
         
       }
       
-      function runQuery(exp) {
-        var experiment = experimentSelects[exp].MPSelect('value'),
-            experimentEvent = eventSelects[exp].MPSelect('value'),
-            conversion1 = conversionSelects[exp]['a'].MPEventSelect('value'),
-            conversion2 = conversionSelects[exp]['b'].MPEventSelect('value'),
+      function runQuery(event) {
+        var experiment = experimentSelect.MPSelect('value'),
+            experimentEvent = eventSelect.MPSelect('value'),
+            conversionEvent = conversionSelects[event].MPEventSelect('value'),
+            conversionProp = propertySelects[event].MPPropertySelect('value'),
             people = {};
+        if (queries[event]) {
+          var conversionPropQuery = queries[event].MPSelect('value'),
+              conversionPropValue = propValueSelects[event].MPSelect('value');
+        }
+            
+        people['total'] = {'count': 0, 'first': 0.00, 'lifetime': 0.00}
             
         MP.api.people().done(function(json0) {
 
@@ -200,9 +236,30 @@
             for (var profile in profiles) {
               if (profiles.hasOwnProperty(profile)) {
                 if (profiles[profile].$properties.hasOwnProperty(experiment)) {
-                  var distinct = profiles[profile].$distinct_id;
-                  var experimentValue = profiles[profile].$properties[experiment];
-                  people[distinct] = experimentValue;
+                  
+                  people['total']['count'] += 1;
+
+                  var distinct = profiles[profile].$distinct_id,
+                      experimentValue = profiles[profile].$properties[experiment];
+                      
+                  if (people[experimentValue]) { 
+                    people[experimentValue]['count'] += 1;
+                  }
+                  else {
+                    people[experimentValue] = {'count': 1, 'first': 0.00, 'lifetime': 0.00};
+                  }
+                  
+                  if (profiles[profile].$properties.hasOwnProperty('First Payment Amount')) {
+                    var firstRevenue = profiles[profile].$properties['First Payment Amount'];
+                    people[experimentValue]['first'] += firstRevenue;
+                    people['total']['first'] += firstRevenue;
+                  }
+                  if (profiles[profile].$properties.hasOwnProperty('Lifetime Revenue')) {
+                    var lifeRevenue = profiles[profile].$properties['Lifetime Revenue'];
+                    people[experimentValue]['lifetime'] += lifeRevenue;
+                    people['total']['lifetime'] += lifeRevenue;
+                  }
+
                 }
               }
             }
@@ -216,28 +273,50 @@
             }
           }
           
-          console.log(people);
-
         });
         
         var funnelParameters = {
-          segment: 'variant name'
+              segment: 'variant name',
+              where: ''
+            };
+            
+        // define selector for conversion event in funnel based on query dropdown
+        if (conversionPropQuery == 'contains') {
+          funnelParameters.where = '"' + conversionPropValue + '" in string(properties["' + conversionProp + '"])'
         }
-        MP.api.funnel({event: 'Experiment Viewed', selector: 'properties["experiment name"] == "' + experimentEvent + '"'}, conversion1, funnelParameters).done(function(results) {
+        else if (conversionPropQuery == 'does not contain') {
+          funnelParameters.where = 'not "' + conversionPropValue + '" in string(properties["' + conversionProp + '"])'
+        }
+        else if (conversionPropQuery == 'equals') {
+          funnelParameters.where = '(string(properties["' + conversionProp + '"]) == "' + conversionPropValue + '")'
+        }
+        else if (conversionPropQuery == 'does not equal') {
+          funnelParameters.where = '(string(properties["' + conversionProp + '"]) != "' + conversionPropValue + '")'
+        }
+        else if (conversionPropQuery == 'is set') {
+          funnelParameters.where = 'defined (properties["' + conversionProp + '"])'
+        }
+        else if (conversionPropQuery == 'is not set') {
+          funnelParameters.where = 'not defined (properties["' + conversionProp + '"])'
+        }
+        
+        // query Mixpanel for funnel information and transform it to populate the graph and table
+        // MP.api.funnel({event: 'Experiment Viewed', selector: 'properties["experiment name"] == "' + experimentEvent + '"'}, {event: conversionEvent, selector: conversionSelector}, funnelParameters).done(function(results) {
+        MP.api.funnel({'event': 'Experiment Viewed', 'selector': 'properties["experiment name"] == "' + experimentEvent + '"'}, conversionEvent, funnelParameters).done(function(results) {
           var funnelObject = {},
               tableObject = {};
 
           for (variant in results) {
             funnelObject[variant] = {};
             tableObject[variant] = {'Experiment Viewed':0};
-            tableObject[variant][conversion1] = 0;
+            tableObject[variant][conversionEvent] = 0;
             
             for (date in results[variant]) {
               funnelObject[variant][date] = results[variant][date][1].overall_conv_ratio;
               tableObject[variant]['Experiment Viewed'] += results[variant][date][0].count;
-              tableObject[variant][conversion1] += results[variant][date][1].count;
+              tableObject[variant][conversionEvent] += results[variant][date][1].count;
             }
-            var conversion = tableObject[variant][conversion1] / tableObject[variant]['Experiment Viewed'];
+            var conversion = tableObject[variant][conversionEvent] / tableObject[variant]['Experiment Viewed'];
             if (!isNaN(conversion)) {
               tableObject[variant]['~Conversion'] = (conversion * 100).toFixed(2) + '%';
             }
@@ -248,43 +327,159 @@
 
           for (variant in tableObject) {
             var origTotal = tableObject['Original']['Experiment Viewed'],
-                origSuccess = tableObject['Original'][conversion1],
+                origSuccess = tableObject['Original'][conversionEvent],
                 varTotal = tableObject[variant]['Experiment Viewed'],
-                varSuccess = tableObject[variant][conversion1];
+                varSuccess = tableObject[variant][conversionEvent];
             
             stats = calcStats(origTotal, origSuccess, varTotal, varSuccess);
             tableObject[variant]['~~Improvement'] = stats[0];
             tableObject[variant]['~Conversion'] += " " + stats[1];
             tableObject[variant]['~~~Chance to Beat Original'] = stats[2];
-            tableObject[variant]['~~~Result (only if significant)'] = stats[3];
+            if (stats[3] != '--') {
+              tableObject[variant]['~~~Chance to Beat Original'] += ' ' + stats[3];
+            }
+            
+            if (people.hasOwnProperty(variant)) {
+              if (people[variant]['count'] != 0) {
+                tableObject[variant]['~~~~Average First Payment'] = '$' + (people[variant]['first'] / people[variant]['count']).toFixed(2);
+                tableObject[variant]['~~~~Average Lifetime Revenue'] = '$' + (people[variant]['lifetime'] / people[variant]['count']).toFixed(2);
+              }
+              else {
+                tableObject[variant]['~~~~Average First Payment'] = '--';
+                tableObject[variant]['~~~~Average Lifetime Revenue'] = '--';
+              }
+            }
+            else if (variant == '$overall') {
+              if (people['total']['count'] != 0) {
+                tableObject[variant]['~~~~Average First Payment'] = '$' + (people['total']['first'] / people['total']['count']).toFixed(2);
+                tableObject[variant]['~~~~Average Lifetime Revenue'] = '$' + (people['total']['lifetime'] / people['total']['count']).toFixed(2);
+              }
+              else {
+                tableObject[variant]['~~~~Average First Payment'] = '--';
+                tableObject[variant]['~~~~Average Lifetime Revenue'] = '--';
+              }
+            }
+            else {
+              tableObject[variant]['~~~~Average First Payment'] = '--';
+              tableObject[variant]['~~~~Average Lifetime Revenue'] = '--';
+            }
           }
 
           tableObject['$overall']['~~Improvement'] = 'N/A'
           tableObject['$overall']['~~~Chance to Beat Original'] = 'N/A'
-          tableObject['$overall']['~~~Result (only if significant)'] = 'N/A'
           tableObject['Original']['~~Improvement'] = 'N/A'
           tableObject['Original']['~~~Chance to Beat Original'] = 'N/A'
-          tableObject['Original']['~~~Result (only if significant)'] = 'N/A'
+
+          funnelSelects[event].MPChart('setData', funnelObject);
+          tableSelects[event].MPTable('setData', tableObject);
           
-          funnelSelects[exp]['a'].MPChart('setData', funnelObject);
-          tableSelects[exp]['a'].MPTable('setData', tableObject);
-          
-        })
-  
-        console.log($.contains($('body'), $('#experiment' + exp+1)));
-        if ($.contains($('body'), $('#experiment' + exp+1))) {
-          console.log('trueeeee');
-        }
-        else {
-          addExperiment(exp+1);
-        }
+        });
       }
       
-      addExperiment(1);
-      
-      $('#conversion-event1a').on('change', function() {
-        runQuery(1);
-      })
+      addExperiment();
+
+      $('#people-prop-select').on('change', function() {
+        if ( $(this).MPSelect('value').substring($('#event-prop-select').MPSelect('value')) ) {
+          runQuery('a');
+          runQuery('b');
+        }
+      });
+      $('#event-prop-select').on('change', function() {
+        if ( $(this).MPSelect('value').substring($('#people-prop-select').MPSelect('value')) ) {
+          runQuery('a');
+          runQuery('b');
+        }
+      });
+      $('#conversion-event-a').on('change', function() {
+        runQuery('a');
+        $('.where.a').css('display', 'inline-block');
+        
+        $('#conversion-prop-a').MPPropertySelect('setEvent', $(this).MPEventSelect('value')).css('display', 'inline-block');
+        
+      });
+      $('#conversion-prop-a').on('change', function() {
+        runQuery('a');
+        // create dropdown that provides query options
+        var queryOptions = {
+          items: [
+            {label: 'contains', value: 'contains'},
+            {label: 'does not contain', value: 'does not contain'},
+            {label: 'equals', value: 'equals'},
+            {label: 'does not equal', value: 'does not equal'},
+            {label: 'is set', value: 'is set'},
+            {label: 'is not set', value: 'is not set'}
+            ]
+        }
+        queries['a'] = $('.contains.a').MPSelect(queryOptions).css('display', 'inline-block');
+
+        var propVals = { 
+              items: [ 
+                {label: '-- Select property value --', value: 'select'} 
+                ]
+            },
+            eventParams = {
+              event: $('#conversion-event-a').MPEventSelect('value'), 
+              name: $(this).MPPropertySelect('value'), 
+              limit: 255
+            };
+        MP.api.query('api/2.0/events/properties/values', eventParams).done(function(array) {
+          for (property in array) {
+            propVals.items.push({label: array[property], value: array[property]});
+          }
+          propValueSelects['a'] = $('#conversion-prop-value-a').MPSelect(propVals).css('display', 'inline-block');
+        });
+      });
+      $('.contains.a').on('change', function() {
+        runQuery('a');
+      });
+      $('#conversion-prop-value-a').on('change', function() {
+        runQuery('a');
+      });
+      $('#conversion-event-b').on('change', function() {
+        runQuery('b');
+        $('.where.b').css('display', 'inline-block');
+
+        $('#conversion-prop-b').MPPropertySelect('setEvent', $(this).MPEventSelect('value')).css('display', 'inline-block');
+        
+      });
+      $('#conversion-prop-b').on('change', function() {
+        runQuery('b');
+        // create dropdown that provides query options
+        var queryOptions = {
+          items: [
+            {label: 'contains', value: 'contains'},
+            {label: 'does not contain', value: 'does not contain'},
+            {label: 'equals', value: 'equals'},
+            {label: 'does not equal', value: 'does not equal'},
+            {label: 'is set', value: 'is set'},
+            {label: 'is not set', value: 'is not set'}
+            ]
+        }
+        queries['b'] = $('.contains.b').MPSelect(queryOptions).css('display', 'inline-block');
+        
+        var propVals2 = { 
+              items: [ 
+                {label: '-- Select property value --', value: 'select'} 
+                ]
+            },
+            eventParams2 = {
+              event: $('#conversion-event-b').MPEventSelect('value'), 
+              name: $(this).MPPropertySelect('value'), 
+              limit: 255
+            };
+        MP.api.query('api/2.0/events/properties/values', eventParams2).done(function(array) {
+          for (property in array) {
+            propVals2.items.push({label: array[property], value: array[property]});
+          }
+          propValueSelects['b'] = $('#conversion-prop-value-b').MPSelect(propVals2).css('display', 'inline-block');
+        });
+      });
+      $('.contains.b').on('change', function() {
+        runQuery('b');
+      });
+      $('#conversion-prop-value-b').on('change', function() {
+        runQuery('b');
+      });
       
 
     </script>
