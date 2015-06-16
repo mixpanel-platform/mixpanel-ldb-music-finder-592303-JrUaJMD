@@ -188,7 +188,6 @@
           }
           zscore = Math.abs(zscore)/Math.sqrt(2.0);
           
-          // A&S formula 7.1.26
           var t = 1.0/(1.0 + p*zscore);
           var y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*Math.exp(-zscore*zscore);
           
@@ -196,7 +195,7 @@
               result = '--';
           
           if (total1 < 10) {
-            ///////////////////////// $.noop(); jQuery17108019127629231662_1434487566354???????????
+            ///////////////////////// $.noop(); jQuery17108019127629231662_1434487566355???????????
             chance = 'Sample size too small'
           }
           else if (chance >= 0.95) {
