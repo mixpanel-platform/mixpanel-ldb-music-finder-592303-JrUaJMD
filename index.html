@@ -149,15 +149,18 @@
         var conv0 = success0 / total0,
             conv1 = success1 / total1;
 
-        // if ( isNaN(conv1) || isNaN(conv0) ) {
-        //   var variant_stats = ['N/A', '', 'N/A', '']
-        // }
-        // else if ( conv0 == 0 ) {
-        //   var variant_stats = ['Conversion of original cannot equal 0', '', 'N/A', ''];
-        // }
-        if ( isNaN(3) ) {
+        if ( isNaN(conv1) || isNaN(conv0) ) {
+          var variant_stats = ['N/A', '', 'N/A', '']
+        }
+        else if ( conv0 == 0 ) {
+          var variant_stats = ['Conversion of original cannot equal 0', '', 'N/A', ''];
+        }
+        else {
           var improvement = (conv1 - conv0) / conv0;
-          if (!isNaN(improvement) && improvement !== Infinity) {
+          if (isNaN(improvement) || improvement == Infinity) {
+            $.noop();
+          }
+          else {
             improvement = (improvement * 100).toFixed(1) + '%';
             if (improvement > 0) {
               console.log('yes');
@@ -193,7 +196,7 @@
               result = '--';
           
           if (total1 < 10) {
-            ///////////////////////// $.noop(); jQuery17108019127629231662_1434487566353???????????
+            ///////////////////////// $.noop(); jQuery17108019127629231662_1434487566354???????????
             chance = 'Sample size too small'
           }
           else if (chance >= 0.95) {
