@@ -74,6 +74,14 @@
       }
     </style>
     <script>
+      // LDB NOTES
+      // nice to haves: duration (first time experiment viewed with that experiment name property was fired) and retention (has that person also paid in the last 30 days)
+      
+      // summary report: Maybe it just keys off of the primary conversion goal and shows something like experiment name, conversion rate, certainty, and improvement (I think this is pretty similar to what Optimizely does).
+      
+      // monetization is currently tracking average first payment and lifetime revenue *of everyone in the experiment* not just people who paid. do we want only those who have paid?
+
+    
     
       var numExperiments = 0,
           peopleProps = {
@@ -136,76 +144,6 @@
 
       }
       
-      function calcStats(total0, success0, total1, success1) {
-        
-        var conv0 = success0 / total0,
-            conv1 = success1 / total1;
-
-        if ( isNaN(conv1) || isNaN(conv0) ) {
-          var variant_stats = ['N/A', '', 'N/A', '']
-        }
-        else if ( conv0 == 0 ) {
-          var variant_stats = ['Conversion of original cannot equal 0', '', 'N/A', ''];
-        }
-        else {
-          var improvement = (conv1 - conv0) / conv0;
-          if (isNaN(improvement) || improvement == Infinity) {
-            $.noop();
-          }
-          else {
-            improvement = (improvement * 100).toFixed(1) + '%';
-            if (improvement > 0) {
-              console.log('yes');
-              improvement = '+' + improvement;
-            }
-          }
-          
-          var se0 = Math.sqrt(conv0*(1-conv0)/total0),
-              se1 = Math.sqrt(conv1*(1-conv1)/total1),
-              ci = '(±' + (1.96 * se1).toFixed(2) + '%)',
-              zscore = ((conv1 - conv0) / Math.sqrt(Math.pow(se1,2) + Math.pow(se0,2))),
-              // the following is from http://picomath.org/javascript/phi.js.html
-              // constants
-              a1 = 0.254829592,
-              a2 = -0.284496736,
-              a3 =  1.421413741,
-              a4 = -1.453152027,
-              a5 =  1.061405429,
-              p  =  0.3275911;
-
-          // save the sign of zscore
-          var sign = 1;
-          if (zscore < 0) {
-            sign = -1
-          }
-          zscore = Math.abs(zscore)/Math.sqrt(2.0);
-          
-          var t = 1.0/(1.0 + p*zscore);
-          var y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*Math.exp(-zscore*zscore);
-          
-          var chance = 0.5*(1.0 + sign*y),
-              result = '--';
-          
-          if (total1 < 10) {
-            ///////////////////////// $.noop(); jQuery17108019127629231662_1434487566357???????????
-            chance = 'Sample size too small'
-          }
-          else if (chance >= 0.95) {
-            result = 'Win'
-          }
-          else if (chance <= 0.05) {
-            result = 'Lose'
-          }
-          else if (0.95 > chance > 0.05) {
-            result = 'Not Significant'
-          }
-          
-          if (!isNaN(chance)) {
-            chance = (chance * 100).toFixed(1) + '%';
-          }
-          
-          var variant_stats = [improvement, ci, chance, result];
-        }
         
         return variant_stats;
         
