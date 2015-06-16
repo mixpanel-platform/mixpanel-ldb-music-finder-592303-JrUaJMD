@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/css/reset.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.css">
     <script src="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.js"></script>
@@ -161,7 +162,7 @@
           
           var se0 = Math.sqrt(conv0*(1-conv0)/total0),
               se1 = Math.sqrt(conv1*(1-conv1)/total1),
-              ci = '(±' + (1.96 * se1).toFixed(2) + '%)',
+              ci = '(+/-' + (1.96 * se1).toFixed(2) + '%)',
               zscore = ((conv1 - conv0) / Math.sqrt(Math.pow(se1,2) + Math.pow(se0,2))),
               // the following is from http://picomath.org/javascript/phi.js.html
               // constants
@@ -187,7 +188,7 @@
               result = '--';
           
           if (total1 < 10) {
-            ///////////////////////// $.noop(); jQuery17108019127629231662_1434487566348???????????
+            ///////////////////////// $.noop(); jQuery17108019127629231662_1434487566349???????????
             chance = 'Sample size too small'
           }
           else if (chance >= 0.95) {
