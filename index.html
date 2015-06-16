@@ -74,14 +74,6 @@
       }
     </style>
     <script>
-      // LDB NOTES
-      // nice to haves: duration (first time experiment viewed with that experiment name property was fired) and retention (has that person also paid in the last 30 days)
-      
-      // summary report: Maybe it just keys off of the primary conversion goal and shows something like experiment name, conversion rate, certainty, and improvement (I think this is pretty similar to what Optimizely does).
-      
-      // monetization is currently tracking average first payment and lifetime revenue *of everyone in the experiment* not just people who paid. do we want only those who have paid?
-
-    
     
       var numExperiments = 0,
           peopleProps = {
@@ -195,7 +187,7 @@
               result = '--';
           
           if (total1 < 10) {
-            ///////////////////////// $.noop(); jQuery17108019127629231662_1434487566356???????????
+            ///////////////////////// $.noop(); jQuery17108019127629231662_1434487566357???????????
             chance = 'Sample size too small'
           }
           else if (chance >= 0.95) {
