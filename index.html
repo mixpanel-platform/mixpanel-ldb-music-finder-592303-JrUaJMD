@@ -152,7 +152,7 @@
         if (!isNaN(conv1) && !isNaN(conv0) && conv0 != 0) {
           
           var improvement = (conv1 - conv0) / conv0;
-          if (!isNaN(improvement) && improvement != Infinity) {
+          if (!isNaN(improvement) && improvement !== Infinity) {
             improvement = (improvement * 100).toFixed(1) + '%';
             if (improvement > 0) {
               console.log('yes');
@@ -188,7 +188,7 @@
               result = '--';
           
           if (total1 < 10) {
-            ///////////////////////// $.noop(); jQuery17108019127629231662_1434487566350???????????
+            ///////////////////////// $.noop(); jQuery17108019127629231662_1434487566351???????????
             chance = 'Sample size too small'
           }
           else if (chance >= 0.95) {
