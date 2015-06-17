@@ -94,6 +94,20 @@
               {label: '-- Select experiment name --', value: "select"}
             ]
           },
+          queryOptions = {
+            items: [
+              {label: 'contains', value: 'contains'},
+              {label: 'does not contain', value: 'does not contain'},
+              {label: 'equals', value: 'equals'},
+              {label: 'does not equal', value: 'does not equal'},
+              {label: 'is set', value: 'is set'},
+              {label: 'is not set', value: 'is not set'}
+              ]
+          },
+          propVals = {},
+          propVals2 = {},
+          eventParams = {},
+          eventParams2 = {},
           experimentSelect = '',
           eventSelect = '',
           dateSelect ='',
@@ -403,6 +417,7 @@
           runQuery('b');
         }
       });
+      
       $('#conversion-event-a').on('change', function() {
         runQuery('a');
         $('.where.a').css('display', 'inline-block');
@@ -413,24 +428,15 @@
       $('#conversion-prop-a').on('change', function() {
         runQuery('a');
         // create dropdown that provides query options
-        var queryOptions = {
-          items: [
-            {label: 'contains', value: 'contains'},
-            {label: 'does not contain', value: 'does not contain'},
-            {label: 'equals', value: 'equals'},
-            {label: 'does not equal', value: 'does not equal'},
-            {label: 'is set', value: 'is set'},
-            {label: 'is not set', value: 'is not set'}
-            ]
-        }
         queries['a'] = $('.contains.a').MPSelect(queryOptions).css('display', 'inline-block');
 
-        var propVals = { 
-              items: [ 
-                {label: '-- Select property value --', value: 'select'} 
-                ]
-            },
-            eventParams = {
+        // create dropdown of property values for selected property
+        propVals = { 
+          items: [ 
+            {label: '-- Select property value --', value: 'select'} 
+            ]
+        };
+        eventParams = {
               event: $('#conversion-event-a').MPEventSelect('value'), 
               name: $(this).MPPropertySelect('value'), 
               limit: 255
@@ -448,6 +454,7 @@
       $('#conversion-prop-value-a').on('change', function() {
         runQuery('a');
       });
+      
       $('#conversion-event-b').on('change', function() {
         runQuery('b');
         $('.where.b').css('display', 'inline-block');
@@ -458,24 +465,15 @@
       $('#conversion-prop-b').on('change', function() {
         runQuery('b');
         // create dropdown that provides query options
-        var queryOptions = {
-          items: [
-            {label: 'contains', value: 'contains'},
-            {label: 'does not contain', value: 'does not contain'},
-            {label: 'equals', value: 'equals'},
-            {label: 'does not equal', value: 'does not equal'},
-            {label: 'is set', value: 'is set'},
-            {label: 'is not set', value: 'is not set'}
-            ]
-        }
         queries['b'] = $('.contains.b').MPSelect(queryOptions).css('display', 'inline-block');
         
-        var propVals2 = { 
-              items: [ 
-                {label: '-- Select property value --', value: 'select'} 
-                ]
-            },
-            eventParams2 = {
+        // create dropdown of property values for selected property
+        propVals2 = { 
+          items: [ 
+            {label: '-- Select property value --', value: 'select'} 
+            ]
+        };
+        eventParams2 = {
               event: $('#conversion-event-b').MPEventSelect('value'), 
               name: $(this).MPPropertySelect('value'), 
               limit: 255
